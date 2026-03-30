@@ -2,9 +2,7 @@ const CACHE_NAME = 'conquista-v1';
 const ASSETS = [
   '/',
   '/index.html',
-  '/src/main.tsx',
-  '/src/App.tsx',
-  '/src/index.css'
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {

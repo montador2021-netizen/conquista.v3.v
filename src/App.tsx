@@ -43,6 +43,13 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type: 'danger' | 'info';
+  } | null>(null);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   
@@ -160,12 +167,25 @@ export default function App() {
         try {
           const importedGoals = JSON.parse(event.target?.result as string);
           if (Array.isArray(importedGoals)) {
-            if (confirm('Isso irá substituir suas conquistas atuais. Deseja continuar?')) {
-              setGoals(importedGoals);
-            }
+            setConfirmConfig({
+              title: 'Restaurar Backup',
+              message: 'Isso irá substituir suas conquistas atuais. Deseja continuar?',
+              type: 'info',
+              onConfirm: () => {
+                setGoals(importedGoals);
+                setIsConfirmModalOpen(false);
+              }
+            });
+            setIsConfirmModalOpen(true);
           }
         } catch (err) {
-          alert('Arquivo de backup inválido.');
+          setConfirmConfig({
+            title: 'Erro',
+            message: 'Arquivo de backup inválido.',
+            type: 'danger',
+            onConfirm: () => setIsConfirmModalOpen(false)
+          });
+          setIsConfirmModalOpen(true);
         }
       };
       reader.readAsText(file);
@@ -203,9 +223,16 @@ export default function App() {
   };
 
   const handleDeleteGoal = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir esta conquista?')) {
-      setGoals(goals.filter(g => g.id !== id));
-    }
+    setConfirmConfig({
+      title: 'Excluir Conquista',
+      message: 'Tem certeza que deseja excluir esta conquista? Esta ação não pode ser desfeita.',
+      type: 'danger',
+      onConfirm: () => {
+        setGoals(goals.filter(g => g.id !== id));
+        setIsConfirmModalOpen(false);
+      }
+    });
+    setIsConfirmModalOpen(true);
   };
 
   const formatCurrency = (value: number) => {
@@ -216,14 +243,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+    <div className="min-h-screen bg-[#f5f5f0] font-sans text-gray-900">
       {/* Header - Very Compact */}
-      <header className="bg-[#151619] text-white pt-6 pb-10 px-6 rounded-b-[24px] shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[50px] rounded-full -mr-16 -mt-16" />
+      <header className="bg-[#5A5A40] text-white pt-6 pb-10 px-6 rounded-b-[24px] shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[50px] rounded-full -mr-16 -mt-16" />
         
         <div className="max-w-md mx-auto relative z-10 flex justify-between items-center">
           <div>
-            <h1 className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-500 mb-0.5">Patrimônio</h1>
+            <h1 className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60 mb-0.5">Patrimônio</h1>
             <motion.p 
               key={totalSaved}
               initial={{ opacity: 0, y: 5 }}
@@ -236,7 +263,7 @@ export default function App() {
           
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-white text-[#151619] py-2 px-4 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
+            className="bg-white text-[#5A5A40] py-2 px-4 rounded-xl font-black text-[9px] uppercase tracking-wider flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
           >
             <Plus className="w-3 h-3" />
             Novo
@@ -292,21 +319,21 @@ export default function App() {
                     <div className="p-6 flex-1 flex flex-col">
                       <div className="flex justify-between text-[10px] mb-2">
                         <span className="text-gray-400 font-bold uppercase tracking-wider">Progresso</span>
-                        <span className="font-black text-[#151619]">{progress.toFixed(0)}%</span>
+                        <span className="font-black text-[#5A5A40]">{progress.toFixed(0)}%</span>
                       </div>
                       
                       <div className="w-full bg-gray-100 h-2.5 rounded-full mb-5 overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${progress}%` }}
-                          className={`h-full rounded-full transition-all duration-1000 ${isCompleted ? 'bg-green-500' : 'bg-[#151619]'}`}
+                          className={`h-full rounded-full transition-all duration-1000 ${isCompleted ? 'bg-green-600' : 'bg-[#5A5A40]'}`}
                         />
                       </div>
 
                       <div className="flex justify-between items-center mb-5">
                         <div>
                           <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-0.5">Guardado</p>
-                          <p className="font-black text-lg text-[#151619] leading-none">{formatCurrency(goal.currentAmount)}</p>
+                          <p className="font-black text-lg text-[#5A5A40] leading-none">{formatCurrency(goal.currentAmount)}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-0.5">Meta</p>
@@ -316,17 +343,17 @@ export default function App() {
 
                       <div className="mt-auto">
                         {!isCompleted ? (
-                          <div className="bg-blue-50/50 p-3 rounded-[20px] mb-5 flex items-center gap-3 border border-blue-100/50">
-                            <div className="bg-blue-500 p-1.5 rounded-lg">
+                          <div className="bg-[#5A5A40]/5 p-3 rounded-[20px] mb-5 flex items-center gap-3 border border-[#5A5A40]/10">
+                            <div className="bg-[#5A5A40] p-1.5 rounded-lg">
                               <Coins className="w-4 h-4 text-white" />
                             </div>
-                            <p className="text-xs text-blue-700 leading-tight">
+                            <p className="text-xs text-[#5A5A40] leading-tight">
                               Faltam <span className="font-black block text-sm">{formatCurrency(remaining)}</span>
                             </p>
                           </div>
                         ) : (
                           <div className="bg-green-50 p-3 rounded-[20px] mb-5 flex items-center gap-3 border border-green-100">
-                            <div className="bg-green-500 p-1.5 rounded-lg">
+                            <div className="bg-green-600 p-1.5 rounded-lg">
                               <Trophy className="w-4 h-4 text-white" />
                             </div>
                             <p className="text-xs text-green-700 font-black leading-tight">
@@ -342,14 +369,14 @@ export default function App() {
                                 setSelectedGoalId(goal.id);
                                 setIsDepositModalOpen(true);
                               }}
-                              className="flex-1 bg-[#151619] text-white py-3.5 rounded-[20px] font-black text-xs uppercase tracking-wider shadow-lg shadow-black/10 active:scale-95 transition-transform"
+                              className="flex-1 bg-[#5A5A40] text-white py-3.5 rounded-[20px] font-black text-xs uppercase tracking-wider shadow-lg shadow-[#5A5A40]/20 active:scale-95 transition-transform"
                             >
                               Depositar
                             </button>
                           )}
                           <button 
                             onClick={() => handleEditClick(goal)}
-                            className="p-3.5 bg-gray-50 text-gray-300 rounded-[20px] hover:bg-blue-50 hover:text-blue-500 transition-all active:scale-90"
+                            className="p-3.5 bg-gray-50 text-gray-300 rounded-[20px] hover:bg-[#5A5A40]/5 hover:text-[#5A5A40] transition-all active:scale-90"
                           >
                             <Pencil className="w-5 h-5" />
                           </button>
@@ -401,7 +428,7 @@ export default function App() {
                     type="text" 
                     required
                     placeholder="Ex: Viagem, Carro, Notebook..."
-                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#151619]"
+                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#5A5A40]"
                     value={newGoalTitle}
                     onChange={(e) => setNewGoalTitle(e.target.value)}
                   />
@@ -412,7 +439,7 @@ export default function App() {
                     type="number" 
                     required
                     placeholder="R$ 0,00"
-                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#151619]"
+                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#5A5A40]"
                     value={newGoalTarget}
                     onChange={(e) => setNewGoalTarget(e.target.value)}
                   />
@@ -439,7 +466,7 @@ export default function App() {
                     ) : (
                       <div className="grid grid-cols-2 gap-3">
                         <label className="flex flex-col items-center justify-center gap-2 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 cursor-pointer hover:bg-gray-100 transition-colors group">
-                          <Camera className="w-8 h-8 text-gray-400 group-hover:text-[#151619] transition-colors" />
+                          <Camera className="w-8 h-8 text-gray-400 group-hover:text-[#5A5A40] transition-colors" />
                           <span className="text-xs font-bold text-gray-500 uppercase">Escolher Foto</span>
                           <input 
                             type="file" 
@@ -459,7 +486,7 @@ export default function App() {
                       <input 
                         type="url" 
                         placeholder="Cole o link da imagem aqui..."
-                        className="w-full bg-gray-50 border-none rounded-2xl p-4 pr-12 focus:ring-2 focus:ring-[#151619] text-sm"
+                        className="w-full bg-gray-50 border-none rounded-2xl p-4 pr-12 focus:ring-2 focus:ring-[#5A5A40] text-sm"
                         value={newGoalImage.startsWith('data:') ? '' : newGoalImage}
                         onChange={(e) => setNewGoalImage(e.target.value)}
                       />
@@ -471,7 +498,7 @@ export default function App() {
                 </div>
                 <button 
                   type="submit"
-                  className="w-full bg-[#151619] text-white py-4 rounded-2xl font-bold text-lg mt-4 shadow-lg shadow-black/20 active:scale-95 transition-transform"
+                  className="w-full bg-[#5A5A40] text-white py-4 rounded-2xl font-bold text-lg mt-4 shadow-lg shadow-[#5A5A40]/20 active:scale-95 transition-transform"
                 >
                   Criar Conquista
                 </button>
@@ -508,7 +535,7 @@ export default function App() {
                   <input 
                     type="text" 
                     required
-                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#151619]"
+                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#5A5A40]"
                     value={editGoalTitle}
                     onChange={(e) => setEditGoalTitle(e.target.value)}
                   />
@@ -518,7 +545,7 @@ export default function App() {
                   <input 
                     type="number" 
                     required
-                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#151619]"
+                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#5A5A40]"
                     value={editGoalTarget}
                     onChange={(e) => setEditGoalTarget(e.target.value)}
                   />
@@ -527,14 +554,14 @@ export default function App() {
                   <label className="block text-sm font-bold text-gray-700 mb-1">Link da Imagem (Opcional)</label>
                   <input 
                     type="url" 
-                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#151619] text-sm"
+                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#5A5A40] text-sm"
                     value={editGoalImage}
                     onChange={(e) => setEditGoalImage(e.target.value)}
                   />
                 </div>
                 <button 
                   type="submit"
-                  className="w-full bg-[#151619] text-white py-4 rounded-2xl font-bold text-lg mt-4 shadow-lg shadow-black/20 active:scale-95 transition-transform"
+                  className="w-full bg-[#5A5A40] text-white py-4 rounded-2xl font-bold text-lg mt-4 shadow-lg shadow-[#5A5A40]/20 active:scale-95 transition-transform"
                 >
                   Salvar Alterações
                 </button>
@@ -578,7 +605,7 @@ export default function App() {
                       required
                       autoFocus
                       placeholder="0,00"
-                      className="w-full bg-gray-50 border-none rounded-2xl p-4 pl-12 focus:ring-2 focus:ring-[#151619] text-xl font-bold"
+                      className="w-full bg-gray-50 border-none rounded-2xl p-4 pl-12 focus:ring-2 focus:ring-[#5A5A40] text-xl font-bold"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
                     />
@@ -590,7 +617,7 @@ export default function App() {
                       key={val}
                       type="button"
                       onClick={() => setDepositAmount(val.toString())}
-                      className="bg-gray-100 py-3 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+                      className="bg-gray-100 py-3 rounded-xl font-bold text-gray-600 hover:bg-[#5A5A40]/5 hover:text-[#5A5A40] transition-colors"
                     >
                       + R$ {val}
                     </button>
@@ -598,7 +625,7 @@ export default function App() {
                 </div>
                 <button 
                   type="submit"
-                  className="w-full bg-[#151619] text-white py-4 rounded-2xl font-bold text-lg mt-4 shadow-lg shadow-black/20 active:scale-95 transition-transform"
+                  className="w-full bg-[#5A5A40] text-white py-4 rounded-2xl font-bold text-lg mt-4 shadow-lg shadow-[#5A5A40]/20 active:scale-95 transition-transform"
                 >
                   Confirmar Depósito
                 </button>
@@ -609,44 +636,86 @@ export default function App() {
       </AnimatePresence>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#151619] text-white py-2.5 px-8 flex justify-around items-center z-40 rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.3)] max-w-md mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white py-2.5 px-8 flex justify-around items-center z-40 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.08)] max-w-md mx-auto border-t border-gray-100">
         <div className="flex flex-col items-center">
           <button 
             onClick={exportData}
-            className="p-1.5 text-gray-400 hover:text-white transition-colors"
+            className="p-1.5 text-gray-400 hover:text-[#5A5A40] transition-colors"
           >
             <Download className="w-5 h-5" />
           </button>
-          <span className="text-[7px] font-black uppercase tracking-tighter text-gray-500">Backup</span>
+          <span className="text-[7px] font-black uppercase tracking-tighter text-gray-400">Backup</span>
         </div>
 
         {showInstallBtn && (
           <div className="flex flex-col items-center">
             <button 
               onClick={handleInstallClick}
-              className="p-1.5 text-blue-400 hover:text-blue-300 transition-colors"
+              className="p-1.5 text-[#5A5A40] hover:text-[#5A5A40]/80 transition-colors"
             >
               <Download className="w-5 h-5" />
             </button>
-            <span className="text-[7px] font-black uppercase tracking-tighter text-blue-500">Instalar</span>
+            <span className="text-[7px] font-black uppercase tracking-tighter text-[#5A5A40]">Instalar</span>
           </div>
         )}
         
         <button 
           onClick={() => setIsAddModalOpen(true)}
-          className="bg-white text-[#151619] p-3 rounded-full -mt-8 shadow-xl active:scale-90 transition-transform border-4 border-gray-50"
+          className="bg-[#5A5A40] text-white p-3 rounded-full -mt-10 shadow-xl shadow-[#5A5A40]/40 active:scale-90 transition-transform border-4 border-white"
         >
           <Plus className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col items-center">
-          <label className="p-1.5 text-gray-400 hover:text-white transition-colors cursor-pointer">
+          <label className="p-1.5 text-gray-400 hover:text-[#5A5A40] transition-colors cursor-pointer">
             <Upload className="w-5 h-5" />
             <input type="file" accept=".json" className="hidden" onChange={importData} />
           </label>
-          <span className="text-[7px] font-black uppercase tracking-tighter text-gray-500">Restaurar</span>
+          <span className="text-[7px] font-black uppercase tracking-tighter text-gray-400">Restaurar</span>
         </div>
       </nav>
+
+      {/* Custom Confirmation Modal */}
+      <AnimatePresence>
+        {isConfirmModalOpen && confirmConfig && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsConfirmModalOpen(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-white w-full max-w-xs rounded-[32px] p-8 shadow-2xl text-center"
+            >
+              <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${confirmConfig.type === 'danger' ? 'bg-red-50 text-red-500' : 'bg-[#5A5A40]/10 text-[#5A5A40]'}`}>
+                {confirmConfig.type === 'danger' ? <Trash2 className="w-8 h-8" /> : <Upload className="w-8 h-8" />}
+              </div>
+              <h3 className="text-xl font-black mb-2">{confirmConfig.title}</h3>
+              <p className="text-sm text-gray-500 mb-8 leading-relaxed">{confirmConfig.message}</p>
+              
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={confirmConfig.onConfirm}
+                  className={`w-full py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95 transition-transform ${confirmConfig.type === 'danger' ? 'bg-red-500 shadow-red-200' : 'bg-[#5A5A40] shadow-[#5A5A40]/20'}`}
+                >
+                  Confirmar
+                </button>
+                <button 
+                  onClick={() => setIsConfirmModalOpen(false)}
+                  className="w-full py-4 rounded-2xl font-bold text-gray-400 hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
