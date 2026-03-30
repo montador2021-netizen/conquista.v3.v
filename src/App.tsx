@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   X,
   Download,
-  Upload
+  Upload,
+  Pencil
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -40,13 +41,20 @@ export default function App() {
     }
   });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   
   // New Goal Form
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalTarget, setNewGoalTarget] = useState('');
   const [newGoalImage, setNewGoalImage] = useState('');
+
+  // Edit Goal Form
+  const [editGoalTitle, setEditGoalTitle] = useState('');
+  const [editGoalTarget, setEditGoalTarget] = useState('');
+  const [editGoalImage, setEditGoalImage] = useState('');
 
   // Deposit Form
   const [depositAmount, setDepositAmount] = useState('');
@@ -103,6 +111,34 @@ export default function App() {
     setNewGoalTarget('');
     setNewGoalImage('');
     setIsAddModalOpen(false);
+  };
+
+  const handleEditClick = (goal: Goal) => {
+    setEditingGoal(goal);
+    setEditGoalTitle(goal.title);
+    setEditGoalTarget(goal.targetAmount.toString());
+    setEditGoalImage(goal.imageUrl || '');
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateGoal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingGoal || !editGoalTitle || !editGoalTarget) return;
+
+    setGoals(goals.map(g => {
+      if (g.id === editingGoal.id) {
+        return {
+          ...g,
+          title: editGoalTitle,
+          targetAmount: parseFloat(editGoalTarget),
+          imageUrl: editGoalImage || `https://picsum.photos/seed/${encodeURIComponent(editGoalTitle)}/400/200`,
+        };
+      }
+      return g;
+    }));
+
+    setIsEditModalOpen(false);
+    setEditingGoal(null);
   };
 
   const exportData = () => {
@@ -312,6 +348,12 @@ export default function App() {
                             </button>
                           )}
                           <button 
+                            onClick={() => handleEditClick(goal)}
+                            className="p-3.5 bg-gray-50 text-gray-300 rounded-[20px] hover:bg-blue-50 hover:text-blue-500 transition-all active:scale-90"
+                          >
+                            <Pencil className="w-5 h-5" />
+                          </button>
+                          <button 
                             onClick={() => handleDeleteGoal(goal.id)}
                             className="p-3.5 bg-gray-50 text-gray-300 rounded-[20px] hover:bg-red-50 hover:text-red-500 transition-all active:scale-90"
                           >
@@ -432,6 +474,69 @@ export default function App() {
                   className="w-full bg-[#151619] text-white py-4 rounded-2xl font-bold text-lg mt-4 shadow-lg shadow-black/20 active:scale-95 transition-transform"
                 >
                   Criar Conquista
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {isEditModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsEditModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              className="relative bg-white w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Editar Conquista</h2>
+                <button onClick={() => setIsEditModalOpen(false)} className="p-2 bg-gray-100 rounded-full">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateGoal} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Nome da Conquista</label>
+                  <input 
+                    type="text" 
+                    required
+                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#151619]"
+                    value={editGoalTitle}
+                    onChange={(e) => setEditGoalTitle(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Valor Total (R$)</label>
+                  <input 
+                    type="number" 
+                    required
+                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#151619]"
+                    value={editGoalTarget}
+                    onChange={(e) => setEditGoalTarget(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Link da Imagem (Opcional)</label>
+                  <input 
+                    type="url" 
+                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-[#151619] text-sm"
+                    value={editGoalImage}
+                    onChange={(e) => setEditGoalImage(e.target.value)}
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  className="w-full bg-[#151619] text-white py-4 rounded-2xl font-bold text-lg mt-4 shadow-lg shadow-black/20 active:scale-95 transition-transform"
+                >
+                  Salvar Alterações
                 </button>
               </form>
             </motion.div>
