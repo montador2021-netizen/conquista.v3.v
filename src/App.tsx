@@ -19,7 +19,7 @@ import {
   Upload,
   Pencil
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface Goal {
   id: string;
