@@ -51,6 +51,33 @@ export default function App() {
   // Deposit Form
   const [depositAmount, setDepositAmount] = useState('');
 
+  // PWA Install Prompt
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      setShowInstallBtn(false);
+      setDeferredPrompt(null);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBtn(false);
+    }
+    setDeferredPrompt(null);
+  };
+
   // Save to localStorage
   useEffect(() => {
     localStorage.setItem('conquista_goals', JSON.stringify(goals));
@@ -487,6 +514,18 @@ export default function App() {
           </button>
           <span className="text-[7px] font-black uppercase tracking-tighter text-gray-500">Backup</span>
         </div>
+
+        {showInstallBtn && (
+          <div className="flex flex-col items-center">
+            <button 
+              onClick={handleInstallClick}
+              className="p-1.5 text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              <Download className="w-5 h-5" />
+            </button>
+            <span className="text-[7px] font-black uppercase tracking-tighter text-blue-500">Instalar</span>
+          </div>
+        )}
         
         <button 
           onClick={() => setIsAddModalOpen(true)}

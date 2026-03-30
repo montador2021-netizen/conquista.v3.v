@@ -1,0 +1,23 @@
+{
+  "name": "Conquista - Rastreador de Objetivos",
+  "short_name": "Conquista",
+  "description": "Acompanhe suas economias e conquistas pessoais.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#151619",
+  "theme_color": "#151619",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/money/192/192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://picsum.photos/seed/money/512/512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
